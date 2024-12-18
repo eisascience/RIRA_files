@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import os
+import pandas as pd
 
 # Set global plot settings for publication quality
 mpl.rcParams["savefig.dpi"] = 300  # High resolution
@@ -33,8 +34,8 @@ sc.pl.scatter(adata, x="total_counts", y="n_genes_by_counts", color="pct_counts_
 
 # --- Filtering ---
 # Filter cells with minimum gene count and genes expressed in at least 3 cells
-sc.pp.filter_cells(adata, min_genes=100)
-sc.pp.filter_genes(adata, min_cells=3)
+# sc.pp.filter_cells(adata, min_genes=100)
+# sc.pp.filter_genes(adata, min_cells=3)
 
 # --- Doublet Detection ---
 # Run Scrublet to detect doublets
@@ -82,7 +83,7 @@ sc.pl.umap(adata, color=["leiden"], save="umap_leiden.pdf")
 
 print(adata.obs.columns)
 
-sc.pl.umap(adata, color="DatasetId", size=3, save="umap_population.pdf")
+sc.pl.umap(adata, color="Population", size=3, save="umap_population.pdf")
 
 
 # Explore multiple clustering resolutions
@@ -97,14 +98,19 @@ sc.pl.umap(adata, color=["leiden_res_1.20", "leiden_res_2.00"],
 # --- Save Clustering Results for R ---
 # Create a DataFrame with rownames (cell IDs) and clustering assignments
 clustering_results = adata.obs[["leiden"] + [f"leiden_res_{res:4.2f}" for res in [0.02, 0.5, 1.2, 2.0]]]
-clustering_results.index.name = "Cell_ID"
+clustering_results.index.name = "barcode"
 clustering_results.to_csv("/Volumes/Maggie/Work/OHSU/Bimber/Expts/RIRA_manuscript/data/FACS/RhesusFACS_TNK_Nov3023_scanpy_processed_clustering_results.csv")
 
 print("Clustering results saved to CSV.")
 
+# Save highly variable gene names for R
+hvg_genes = adata.var[adata.var["highly_variable"]].index.tolist()
+hvg_genes_df = pd.DataFrame(hvg_genes, columns=["Gene"])
+hvg_genes_df.to_csv("/Volumes/Maggie/Work/OHSU/Bimber/Expts/RIRA_manuscript/data/FACS/RhesusFACS_TNK_Nov3023_hvg_genes.csv", index=False)
 
 # Save the updated AnnData
-# adata.write("/Volumes/Maggie/Work/OHSU/Bimber/Expts/RIRA_manuscript/data/FACS/RhesusFACS_TNK_Nov3023_scanpy_processed.h5ad")
+adata.write("/Volumes/Maggie/Work/OHSU/Bimber/Expts/RIRA_manuscript/data/FACS/RhesusFACS_TNK_Nov3023.seurat_554361.h5ad")
+
 
 print("Pipeline completed. Processed data saved.")
 
