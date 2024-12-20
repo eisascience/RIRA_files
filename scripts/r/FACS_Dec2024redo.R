@@ -3,6 +3,25 @@
 source("./rbin/RIRA4v3/LoadLibraries.R")
 source("./rbin/FACSdata/FACS_Seurat_final_load.R")
 
+ComboSerObj$barcode = colnames(ComboSerObj)
+
+
+# to start the python steps first need to convert and save the h5ad
+if(!file.exists("./data/FACS/RhesusFACS_TNK_Nov3023.seurat_554361.h5ad")){
+  # Export raw counts to AnnData for use in Scanpy
+  sce <- as.SingleCellExperiment(ComboSerObj)
+
+  colnames(sce)
+  rownames(sce)
+  
+  # Convert non-string columns in 'obs' to strings
+  sce@colData <- sce@colData[, c("barcode", "Population", "Pop2"), drop = FALSE]
+  
+  
+  writeH5AD(sce, file = "./data/FACS/RhesusFACS_TNK_Nov3023.seurat_554361.h5ad")
+}
+
+
 #more specific libraries
 library(reticulate)
 library(zellkonverter)
@@ -10,7 +29,6 @@ library(SeuratDisk)
 library(S4Vectors)
 library(SingleCellExperiment)
 
-ComboSerObj$barcode = colnames(ComboSerObj)
 
 #thse files are made in python... see the python code
 sce_Meta = data.table::fread("/Volumes/Maggie/Work/OHSU/Bimber/Expts/RIRA_manuscript/data/FACS/RhesusFACS_TNK_Nov3023_scanpy_processed_clustering_results.csv") %>% as.data.frame()
